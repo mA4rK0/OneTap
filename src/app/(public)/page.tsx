@@ -17,7 +17,7 @@ export default function Home() {
         setUser(data.user);
 
         if (data.user) {
-          router.replace("/tes");
+          router.replace("/linkusername");
         }
       } catch (error) {
         console.error("Error getting user:", error);

@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/app/(private)/lib/supa-client-init";
 import { useRouter } from "next/navigation";
 
-export default function Dashboard() {
+export default function Username() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [username, setUsername] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -95,31 +96,59 @@ export default function Dashboard() {
     );
   }
 
-  return (
-    <main className="min-h-screen p-4">
-      <div className="card max-w-4xl mx-auto mt-20 text-center">
-        <h1 className="text-3xl font-bold gradient-text mb-6">
-          Welcome, {user.email}!
-        </h1>
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!username.trim() || !user) return;
+    const { error } = await supabase.from("profiles").insert({
+      user_id: user.id, // uuid from auth.users
+      username: username.trim(),
+    });
+    if (error) {
+      console.error("Gagal menyimpan username:", error);
+      setError(error.message);
+      return;
+    }
+  };
 
-        <button
-          onClick={() => supabase.auth.signOut().then(() => router.push("/"))}
-          className="btn-primary flex items-center justify-center gap-2 mx-auto"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            fill="currentColor"
-            viewBox="0 0 16 16"
-            className="w-5 h-5"
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Welcome to OneTap
+          </h1>
+          <p className="text-gray-600">Choose your OneTap username</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Your username..."
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg"
           >
-            <path d="M12 10V8H6V6h6V4l4 3-4 3z" />
-            <path d="M10 2H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h6v-2H4V4h6V2z" />
-          </svg>
-          log out
-        </button>
+            Continue
+          </button>
+        </form>
+
+        <div className="mt-8 text-center text-sm text-gray-500">
+          <p>
+            Already have an account?{" "}
+            <a href="/login" className="text-blue-600 hover:underline">
+              Log in
+            </a>
+          </p>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
