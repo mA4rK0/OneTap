@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/app/(private)/lib/supa-client-init";
 import Navbar from "./components/Navbar";
+import LoadingSpinner from "./components/LoadingSpinner";
 
 export default function Home() {
-  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -14,7 +14,6 @@ export default function Home() {
     const getUser = async () => {
       try {
         const { data } = await supabase.auth.getUser();
-        setUser(data.user);
 
         if (data.user) {
           router.replace("/linkusername");
@@ -30,12 +29,7 @@ export default function Home() {
   }, [router]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex justify-center items-center flex-col">
-        <div className="spinner"></div>
-        <p className="mt-4">Loading...</p>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
