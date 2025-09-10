@@ -1,18 +1,38 @@
 "use client";
 
-import { useState } from "react";
-import { supabase } from "@/app/(private)/lib/supa-client-init";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/app/(private)/lib/supa-client-init";
 import useAuth from "@/app/(private)/hooks/useAuth";
 import LoadingSpinner from "../components/LoadingSpinner";
 import RestrictedAccess from "../components/RestrictedAccess";
 
 export default function Dashboard() {
-  const { user, loading } = useAuth();
-  const [error, setError] = useState<string | null>(null);
+  const { user, profile, loading, error } = useAuth();
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const router = useRouter();
 
-  if (loading) {
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      return;
+    }
+
+    if (!profile?.username && !isRedirecting) {
+      setIsRedirecting(true);
+      router.push("/linkusername");
+      return;
+    }
+
+    if (!profile?.category && !isRedirecting) {
+      setIsRedirecting(true);
+      router.push("/category");
+      return;
+    }
+  }, [user, profile, loading, router, isRedirecting]);
+
+  if (loading || isRedirecting) {
     return <LoadingSpinner />;
   }
 
@@ -41,8 +61,12 @@ export default function Dashboard() {
     <main className="min-h-screen p-4">
       <div className="card max-w-4xl mx-auto mt-20 text-center">
         <h1 className="text-3xl font-bold gradient-text mb-6">
-          Welcome, {user.email}! DONE
+          Welcome, {user.email}!
         </h1>
+        <p className="text-lg text-gray-600 mb-8">
+          Username: {profile?.username || "Not set"} | Category:{" "}
+          {profile?.category || "Not set"}
+        </p>
 
         <button
           onClick={() => supabase.auth.signOut().then(() => router.push("/"))}
@@ -59,7 +83,7 @@ export default function Dashboard() {
             <path d="M12 10V8H6V6h6V4l4 3-4 3z" />
             <path d="M10 2H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h6v-2H4V4h6V2z" />
           </svg>
-          log out
+          Log out
         </button>
       </div>
     </main>

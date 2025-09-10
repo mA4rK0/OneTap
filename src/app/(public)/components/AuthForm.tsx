@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/app/(private)/lib/supa-client-init";
-
-type Props = { mode: "signup" | "login" };
+import type { Props } from "@/app/(private)/types";
 
 export default function AuthForm({ mode }: Props) {
   const [email, setEmail] = useState("");

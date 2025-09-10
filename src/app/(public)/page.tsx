@@ -11,21 +11,33 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    const getUser = async () => {
+    const checkAuth = async () => {
       try {
         const { data } = await supabase.auth.getUser();
 
         if (data.user) {
-          router.replace("/linkusername");
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("username, category")
+            .eq("user_id", data.user.id)
+            .single();
+
+          if (profile?.username && profile?.category) {
+            router.push("/dashboard");
+          } else if (profile?.username) {
+            router.push("/category");
+          } else {
+            router.push("/linkusername");
+          }
         }
       } catch (error) {
-        console.error("Error getting user:", error);
+        console.error("Error checking auth:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    getUser();
+    checkAuth();
   }, [router]);
 
   if (loading) {

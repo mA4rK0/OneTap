@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/app/(private)/lib/supa-client-init";
 import { useRouter } from "next/navigation";
 import useAuth from "@/app/(private)/hooks/useAuth";
@@ -8,11 +8,24 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import RestrictedAccess from "../components/RestrictedAccess";
 
 export default function Username() {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const [username, setUsername] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      return;
+    }
+
+    if (profile?.username) {
+      router.push("/category");
+      return;
+    }
+  }, [user, profile, loading, router]);
 
   if (loading) {
     return <LoadingSpinner />;
@@ -56,11 +69,20 @@ export default function Username() {
         return;
       }
 
-      localStorage.setItem("tempUsername", username.trim());
+      const { error } = await supabase.from("profiles").upsert({
+        user_id: user.id,
+        username: username.trim(),
+        category: profile?.category || null,
+      });
+
+      if (error) {
+        throw error;
+      }
+
       router.push("/category");
     } catch (error) {
-      console.error("Error checking username:", error);
-      setFormError("An error occurred while checking username availability.");
+      console.error("Error saving username:", error);
+      setFormError("An error occurred while saving your username.");
     } finally {
       setCheckingUsername(false);
     }
@@ -114,15 +136,6 @@ export default function Username() {
             {checkingUsername ? "Checking availability..." : "Continue"}
           </button>
         </form>
-
-        <div className="mt-8 text-center text-sm text-gray-500">
-          <p>
-            Already have an account?{" "}
-            <a href="/login" className="text-blue-600 hover:underline">
-              Log in
-            </a>
-          </p>
-        </div>
       </div>
     </div>
   );

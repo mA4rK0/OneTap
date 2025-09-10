@@ -12,7 +12,7 @@ export default function Callback() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN") {
-        router.replace("/linkusername");
+        router.push("/dashboard");
       }
     });
 

@@ -6,116 +6,34 @@ import { useRouter } from "next/navigation";
 import useAuth from "@/app/(private)/hooks/useAuth";
 import LoadingSpinner from "../components/LoadingSpinner";
 import RestrictedAccess from "../components/RestrictedAccess";
-
-type ProfileCategory =
-  | "sports"
-  | "technology"
-  | "music"
-  | "art"
-  | "business"
-  | "education"
-  | "entertainment"
-  | "food_&_beverage"
-  | "travel"
-  | "other"
-  | "health"
-  | "government_&_politics"
-  | "fashion_&_beauty";
+import type { ProfileCategory } from "@/app/(private)/types";
 
 export default function CategorySelection() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<
     ProfileCategory | ""
   >("");
   const [formError, setFormError] = useState<string | null>(null);
-  const [username, setUsername] = useState("");
-  const [profileLoading, setProfileLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
 
-  const formatCategoryLabel = (value: string): string => {
-    return value
-      .split("_")
-      .map((word) => {
-        if (word === "&") return "&";
-        return word.charAt(0).toUpperCase() + word.slice(1);
-      })
-      .join(" ")
-      .replace(/\b&\b/g, "&");
-  };
-
-  const categories = (
-    [
-      "sports",
-      "technology",
-      "music",
-      "art",
-      "business",
-      "education",
-      "entertainment",
-      "food_&_beverage",
-      "travel",
-      "other",
-      "health",
-      "government_&_politics",
-      "fashion_&_beauty",
-    ] as ProfileCategory[]
-  ).map((value) => ({
-    value,
-    label: formatCategoryLabel(value),
-  }));
-
   useEffect(() => {
-    const checkUserAndProfile = async () => {
-      try {
-        setProfileLoading(true);
+    if (loading) return;
 
-        if (authLoading) {
-          return;
-        }
+    if (!user) {
+      return;
+    }
 
-        if (!user) {
-          setProfileLoading(false);
-          return;
-        }
+    if (profile?.category) {
+      router.push("/dashboard");
+      return;
+    }
 
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("username, category")
-          .eq("user_id", user.id)
-          .single();
-
-        if (profileData) {
-          setUsername(profileData.username);
-
-          if (profileData.category) {
-            router.push("/tes");
-            return;
-          }
-        }
-
-        if (profileError && profileError.code !== "PGRST116") {
-          console.error("Error checking profile:", profileError);
-        }
-
-        const tempUsername = localStorage.getItem("tempUsername");
-        if (!tempUsername) {
-          router.push("/linkusername");
-          return;
-        }
-
-        setUsername(tempUsername);
-      } catch (err) {
-        console.error("Error in checkUserAndProfile:", err);
-      } finally {
-        setProfileLoading(false);
-      }
-    };
-
-    checkUserAndProfile();
-  }, [user, authLoading, router]);
-
-  const loading = authLoading || profileLoading;
+    if (!profile?.username) {
+      router.push("/linkusername");
+      return;
+    }
+  }, [user, profile, loading, router]);
 
   if (loading) {
     return <LoadingSpinner />;
@@ -136,40 +54,22 @@ export default function CategorySelection() {
       return;
     }
 
-    const tempUsername = localStorage.getItem("tempUsername");
-    if (!tempUsername) {
-      setFormError(
-        "Username not found. Please go back and enter your username again."
-      );
-      setSubmitting(false);
-      return;
-    }
-
     try {
-      const { error } = await supabase.from("profiles").insert({
-        user_id: user.id,
-        username: tempUsername,
-        category: selectedCategory,
-      });
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          category: selectedCategory,
+        })
+        .eq("user_id", user.id);
 
       if (error) {
-        console.error("Error inserting profile:", error);
-
-        if (error.code === "23505") {
-          setFormError(
-            "This username is no longer available. Please go back and choose a different username."
-          );
-          localStorage.removeItem("tempUsername");
-        } else {
-          setFormError(error.message);
-        }
-
+        console.error("Error updating profile:", error);
+        setFormError(error.message);
         setSubmitting(false);
         return;
       }
 
-      localStorage.removeItem("tempUsername");
-      router.push("/tes");
+      router.push("/dashboard");
     } catch (err) {
       console.error("Unexpected error:", err);
       setFormError("An unexpected error occurred");
@@ -182,7 +82,7 @@ export default function CategorySelection() {
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Welcome{username ? `, ${username}` : ""} to OneTap
+            Welcome to OneTap
           </h1>
           <p className="text-gray-600">Choose your interest category</p>
         </div>
@@ -211,11 +111,21 @@ export default function CategorySelection() {
               disabled={submitting}
             >
               <option value="">Select a category</option>
-              {categories.map((category) => (
-                <option key={category.value} value={category.value}>
-                  {category.label}
-                </option>
-              ))}
+              <option value="sports">Sports</option>
+              <option value="technology">Technology</option>
+              <option value="music">Music</option>
+              <option value="art">Art</option>
+              <option value="business">Business</option>
+              <option value="education">Education</option>
+              <option value="entertainment">Entertainment</option>
+              <option value="food_&_beverage">Food & Beverage</option>
+              <option value="travel">Travel</option>
+              <option value="other">Other</option>
+              <option value="health">Health</option>
+              <option value="government_&_politics">
+                Government & Politics
+              </option>
+              <option value="fashion_&_beauty">Fashion & Beauty</option>
             </select>
             {formError && (
               <p className="text-red-500 text-sm mt-2">{formError}</p>
@@ -227,7 +137,7 @@ export default function CategorySelection() {
             disabled={submitting}
             className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {submitting ? "Creating your profile..." : "Continue"}
+            {submitting ? "Saving..." : "Continue"}
           </button>
         </form>
       </div>
