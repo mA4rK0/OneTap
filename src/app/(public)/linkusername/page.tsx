@@ -21,6 +21,11 @@ export default function Username() {
       return;
     }
 
+    if (profile?.username && profile?.category) {
+      router.push("/dashboard");
+      return;
+    }
+
     if (profile?.username) {
       router.push("/category");
       return;

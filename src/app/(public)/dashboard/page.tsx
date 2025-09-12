@@ -6,6 +6,7 @@ import { supabase } from "@/app/(private)/lib/supa-client-init";
 import useAuth from "@/app/(private)/hooks/useAuth";
 import LoadingSpinner from "../components/LoadingSpinner";
 import RestrictedAccess from "../components/RestrictedAccess";
+import UpdateUsername from "../components/EditUsername";
 
 export default function Dashboard() {
   const { user, profile, loading, error } = useAuth();
@@ -67,6 +68,10 @@ export default function Dashboard() {
           Username: {profile?.username || "Not set"} | Category:{" "}
           {profile?.category || "Not set"}
         </p>
+
+        <div>
+          <UpdateUsername />
+        </div>
 
         <button
           onClick={() => supabase.auth.signOut().then(() => router.push("/"))}
