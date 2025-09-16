@@ -5,6 +5,19 @@ type Profile = {
   category: string | null;
 };
 
+type AppearanceSettings = {
+  background: string;
+  buttonStyle: "rounded-lg" | "rounded-full";
+  buttonColor: string;
+  textColor: string;
+  font: string;
+};
+
+type EditCategoryProps = {
+  currentCategory?: string;
+  onSuccess?: () => void;
+};
+
 type ProfileCategory =
   | "sports"
   | "technology"
@@ -20,4 +33,10 @@ type ProfileCategory =
   | "government_&_politics"
   | "fashion_&_beauty";
 
-export type { Profile, ProfileCategory, Props };
+export type {
+  Profile,
+  ProfileCategory,
+  Props,
+  AppearanceSettings,
+  EditCategoryProps,
+};
