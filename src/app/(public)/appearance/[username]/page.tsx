@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/app/(private)/lib/supa-client-init";
+import { v4 as uuidv4 } from "uuid";
 import useAuth from "@/app/(private)/hooks/useAuth";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import RestrictedAccess from "../../components/RestrictedAccess";
@@ -14,8 +15,10 @@ export default function AppearancePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Menggunakan Zustand store
   const {
     background,
     buttonStyle,
@@ -37,24 +40,111 @@ export default function AppearancePage() {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("appearance_settings")
+        .select("appearance_settings, avatar_url")
         .eq("username", username)
         .single();
 
       if (error) throw error;
 
-      if (data?.appearance_settings) {
-        // Mengatur state Zustand dengan data dari database
-        const settings = data.appearance_settings;
+      if (data) {
+        const settings = data.appearance_settings || {};
         setBackground(settings.background || "#ffffff");
         setButtonStyle(settings.buttonStyle || "rounded-full");
         setButtonColor(settings.buttonColor || "#000000");
         setTextColor(settings.textColor || "#ffffff");
+
+        if (data.avatar_url) {
+          setAvatarUrl(data.avatar_url);
+        }
       }
     } catch (error) {
       console.error("Error loading appearance settings:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAvatarUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    try {
+      setUploading(true);
+      if (!event.target.files || event.target.files.length === 0) {
+        throw new Error("You must select an image to upload.");
+      }
+
+      const file = event.target.files[0];
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = `${user?.id}/${fileName}`;
+
+      // Upload gambar ke Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Dapatkan URL publik
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(filePath);
+
+      // Simpan URL avatar ke database
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("user_id", user?.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setAvatarUrl(publicUrl);
+      alert("Avatar uploaded successfully!");
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      alert("Error uploading avatar");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeAvatar = async () => {
+    try {
+      if (!avatarUrl || !user) return;
+
+      // Ekstrak nama file dari URL
+      const urlParts = avatarUrl.split("/");
+      const fileName = urlParts[urlParts.length - 1];
+      const filePath = `${user.id}/${fileName}`;
+
+      // Hapus file dari storage
+      const { error: deleteError } = await supabase.storage
+        .from("avatars")
+        .remove([filePath]);
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      // Hapus URL avatar dari database
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: null })
+        .eq("user_id", user.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setAvatarUrl(null);
+      alert("Avatar removed successfully!");
+    } catch (error) {
+      console.error("Error removing avatar:", error);
+      alert("Error removing avatar");
     }
   };
 
@@ -116,6 +206,71 @@ export default function AppearancePage() {
               </h2>
 
               <div className="space-y-6">
+                {/* Avatar Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Profile Photo
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                        {avatarUrl ? (
+                          <img
+                            src={avatarUrl}
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-gray-500">Photo</span>
+                        )}
+                      </div>
+                      {avatarUrl && (
+                        <button
+                          type="button"
+                          onClick={removeAvatar}
+                          className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                    <div>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleAvatarUpload}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                        className="btn-secondary text-sm disabled:opacity-50"
+                      >
+                        {uploading
+                          ? "Uploading..."
+                          : avatarUrl
+                          ? "Change Photo"
+                          : "Upload Photo"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Background Color */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -229,8 +384,16 @@ export default function AppearancePage() {
                   <div className="p-6 h-full flex flex-col">
                     {/* Profile Section */}
                     <div className="text-center mb-8 mt-4">
-                      <div className="w-24 h-24 rounded-full bg-gray-300 mx-auto mb-4 flex items-center justify-center">
-                        <span className="text-gray-500">Photo</span>
+                      <div className="w-24 h-24 rounded-full bg-gray-300 mx-auto mb-4 flex items-center justify-center overflow-hidden">
+                        {avatarUrl ? (
+                          <img
+                            src={avatarUrl}
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-gray-500">Photo</span>
+                        )}
                       </div>
                       <h2
                         className="text-xl font-bold mb-2"

@@ -11,6 +11,7 @@ type AppearanceSettings = {
   buttonColor: string;
   textColor: string;
   font: string;
+  avatar_url: string;
 };
 
 type EditCategoryProps = {
