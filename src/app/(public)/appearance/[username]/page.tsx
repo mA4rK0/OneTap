@@ -64,6 +64,33 @@ export default function AppearancePage() {
     }
   };
 
+  const deleteExistingAvatar = async () => {
+    if (!avatarUrl || !user) return;
+
+    try {
+      // Ekstrak path file dari URL avatar
+      const urlParts = avatarUrl.split("/");
+      const fileName = urlParts[urlParts.length - 1];
+      const filePath = `${user.id}/${fileName}`;
+
+      // Hapus file dari storage
+      const { error: deleteError } = await supabase.storage
+        .from("avatars")
+        .remove([filePath]);
+
+      if (deleteError) {
+        console.warn("Failed to delete old avatar:", deleteError);
+        // Lanjutkan proses upload meskipun gagal menghapus file lama
+        return;
+      }
+
+      console.log("Old avatar deleted successfully");
+    } catch (error) {
+      console.error("Error deleting old avatar:", error);
+      // Lanjutkan proses upload meskipun gagal menghapus file lama
+    }
+  };
+
   const handleAvatarUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -71,6 +98,10 @@ export default function AppearancePage() {
       setUploading(true);
       if (!event.target.files || event.target.files.length === 0) {
         throw new Error("You must select an image to upload.");
+      }
+
+      if (avatarUrl) {
+        await deleteExistingAvatar();
       }
 
       const file = event.target.files[0];
