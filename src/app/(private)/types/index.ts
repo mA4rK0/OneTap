@@ -6,6 +6,7 @@ type PreviewProps = {
   avatarUrl: string | null;
   appearanceState: AppearanceState;
   selectedTheme: string;
+  socialLinks?: SocialLink[];
 };
 
 type AppearanceFormProps = {
@@ -87,6 +88,70 @@ type ProfileCategory =
   | "government_&_politics"
   | "fashion_&_beauty";
 
+type SocialPlatform =
+  | "instagram"
+  | "facebook"
+  | "twitter"
+  | "youtube"
+  | "tiktok"
+  | "linkedin"
+  | "whatsapp"
+  | "telegram"
+  | "spotify"
+  | "github"
+  | "discord"
+  | "website"
+  | "email";
+
+type SocialLink = {
+  id: string;
+  platform: SocialPlatform;
+  url: string;
+  order: number;
+};
+
+type PlatformConfig = {
+  name: string;
+  icon: string;
+  placeholder: string;
+  baseUrl?: string;
+  color: string;
+};
+
+type AddSocialLinkFormProps = {
+  onAddLink: (platform: SocialPlatform, url: string) => void;
+  onCancel?: () => void;
+};
+
+type SocialLinkItemProps = {
+  link: SocialLink;
+  onUpdate: (id: string, updates: Partial<SocialLink>) => void;
+  onDelete: (id: string) => void;
+  onDragStart: (id: string) => void;
+  onDragOver: (id: string) => void;
+  onDrop: () => void;
+  isDragging?: boolean;
+};
+
+type SocialLinksPreviewProps = {
+  links: SocialLink[];
+  appearanceState: {
+    buttonStyle: "rounded-lg" | "rounded-full";
+    buttonColor: string;
+    textColor: string;
+  };
+};
+
+type SocialLinksManagerProps = {
+  userId: string;
+  appearanceState: {
+    buttonStyle: "rounded-lg" | "rounded-full";
+    buttonColor: string;
+    textColor: string;
+  };
+  onLinksUpdate?: (links: SocialLink[]) => void;
+};
+
 export type {
   Profile,
   ProfileCategory,
@@ -100,4 +165,11 @@ export type {
   ThemeCardProps,
   PreviewProps,
   AppearanceFormProps,
+  SocialPlatform,
+  SocialLink,
+  PlatformConfig,
+  AddSocialLinkFormProps,
+  SocialLinkItemProps,
+  SocialLinksPreviewProps,
+  SocialLinksManagerProps,
 };

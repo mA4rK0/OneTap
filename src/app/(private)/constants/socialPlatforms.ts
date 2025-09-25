@@ -1,0 +1,93 @@
+import type { SocialPlatform, PlatformConfig } from "@/app/(private)/types";
+
+export const SOCIAL_PLATFORMS: Record<SocialPlatform, PlatformConfig> = {
+  instagram: {
+    name: "Instagram",
+    icon: "📸",
+    placeholder: "username",
+    baseUrl: "https://instagram.com/",
+    color: "bg-gradient-to-r from-purple-500 to-pink-500",
+  },
+  facebook: {
+    name: "Facebook",
+    icon: "👥",
+    placeholder: "username or profile URL",
+    baseUrl: "https://facebook.com/",
+    color: "bg-gradient-to-r from-blue-600 to-blue-800",
+  },
+  twitter: {
+    name: "Twitter",
+    icon: "🐦",
+    placeholder: "username",
+    baseUrl: "https://twitter.com/",
+    color: "bg-gradient-to-r from-blue-400 to-blue-600",
+  },
+  youtube: {
+    name: "YouTube",
+    icon: "📺",
+    placeholder: "channel ID or username",
+    baseUrl: "https://youtube.com/",
+    color: "bg-gradient-to-r from-red-600 to-red-800",
+  },
+  tiktok: {
+    name: "TikTok",
+    icon: "🎵",
+    placeholder: "username",
+    baseUrl: "https://tiktok.com/@",
+    color: "bg-gradient-to-r from-gray-900 to-pink-600",
+  },
+  linkedin: {
+    name: "LinkedIn",
+    icon: "💼",
+    placeholder: "profile URL",
+    baseUrl: "https://linkedin.com/in/",
+    color: "bg-gradient-to-r from-blue-700 to-blue-900",
+  },
+  whatsapp: {
+    name: "WhatsApp",
+    icon: "💬",
+    placeholder: "phone number with country code",
+    baseUrl: "https://wa.me/",
+    color: "bg-gradient-to-r from-green-500 to-green-700",
+  },
+  telegram: {
+    name: "Telegram",
+    icon: "📨",
+    placeholder: "username",
+    baseUrl: "https://t.me/",
+    color: "bg-gradient-to-r from-blue-400 to-blue-600",
+  },
+  spotify: {
+    name: "Spotify",
+    icon: "🎵",
+    placeholder: "profile or playlist URL",
+    baseUrl: "https://open.spotify.com/",
+    color: "bg-gradient-to-r from-green-500 to-green-700",
+  },
+  github: {
+    name: "GitHub",
+    icon: "💻",
+    placeholder: "username",
+    baseUrl: "https://github.com/",
+    color: "bg-gradient-to-r from-gray-700 to-gray-900",
+  },
+  discord: {
+    name: "Discord",
+    icon: "👾",
+    placeholder: "username#1234",
+    color: "bg-gradient-to-r from-purple-500 to-indigo-600",
+  },
+  website: {
+    name: "Website",
+    icon: "🌐",
+    placeholder: "https://yourwebsite.com",
+    color: "bg-gradient-to-r from-teal-500 to-blue-500",
+  },
+  email: {
+    name: "Email",
+    icon: "✉️",
+    placeholder: "your@email.com",
+    baseUrl: "mailto:",
+    color: "bg-gradient-to-r from-red-500 to-orange-500",
+  },
+};

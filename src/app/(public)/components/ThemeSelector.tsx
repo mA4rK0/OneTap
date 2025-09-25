@@ -8,11 +8,8 @@ export default function ThemeSelector({
   onThemeChange,
 }: ThemeSelectorProps) {
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        Select Theme
-      </label>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+    <div className="w-full">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {THEMES.map((theme) => (
           <ThemeCard
             key={theme.id}
